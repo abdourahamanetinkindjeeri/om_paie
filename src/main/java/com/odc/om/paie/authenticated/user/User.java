@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import java.util.Collection;
@@ -39,9 +40,9 @@ public class User implements UserDetails {
 
     private String pin;
 
-    // ...existing code...
+    private String otpCode;
+    private LocalDateTime otpExpiry;
 
-    // ...existing code...
     private String typePiece;
     private String numero;
     private String adresse;

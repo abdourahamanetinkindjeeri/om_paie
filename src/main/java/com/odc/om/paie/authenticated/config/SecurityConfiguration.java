@@ -32,6 +32,7 @@ public class SecurityConfiguration {
 
     private static final String[] WHITE_LIST_URL = {
             "/" + APP_ROOT + "auth/**",
+            "/" + APP_ROOT + "notifications/test-email",
             "/v2/api-docs",
             "/v3/api-docs",
             "/swagger-resources/**",

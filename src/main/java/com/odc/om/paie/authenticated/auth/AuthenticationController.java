@@ -1,6 +1,7 @@
 package com.odc.om.paie.authenticated.auth;
 
 
+import com.odc.om.paie.authenticated.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,8 @@ import static com.odc.om.paie.authenticated.Constants.APP_ROOT;
 public class AuthenticationController {
 
     private final AuthenticationService service;
+    private final OtpService otpService;
+    private final UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
@@ -41,25 +44,32 @@ public class AuthenticationController {
 //    }
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request, HttpServletResponse response) {
         try {
-            // Appeler la méthode login qui renvoie à la fois l'access token, refresh token et l'utilisateur
-            AuthenticationResponse authResponse = service.authenticate(request);
+            // Valider les credentials
+            var user = service.validateCredentials(request);
 
-            // Ajouter le refresh token comme cookie HttpOnly
-            ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
-                    .httpOnly(true)           // Empêcher l'accès en JavaScript
-                    .secure(true)             // S'assurer que le cookie est envoyé uniquement via HTTPS TODO : true
-                    .path("/")                // Disponible sur tout le site
-                    .maxAge(100 * 24 * 60 * 60) // Durée de validité de 100 jours
-                    .sameSite("Strict")       // Renforcer la politique de sécurité SameSite
-                    .build();
+            // Si l'utilisateur a un email, envoyer OTP
+            if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                service.sendOtpAsync(user);
+                return ResponseEntity.ok("OTP envoyé à votre email. Veuillez vérifier.");
+            } else {
+                // Si pas d'email, retourner directement les tokens
+                AuthenticationResponse authResponse = service.generateTokens(user);
 
-            // Ajouter l'en-tête Set-Cookie avec le refresh token
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+                // Ajouter le refresh token comme cookie HttpOnly
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
+                        .httpOnly(true)
+                        .secure(true)
+                        .path("/")
+                        .maxAge(100 * 24 * 60 * 60)
+                        .sameSite("Strict")
+                        .build();
 
-            // Retourner la réponse avec l'access token dans le corps
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + authResponse.getAccessToken())
-                    .body(authResponse);
+                response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authResponse.getAccessToken())
+                        .body(authResponse);
+            }
 
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
@@ -76,6 +86,36 @@ public class AuthenticationController {
             HttpServletResponse response
     ) throws IOException {
         service.refreshToken(request, response);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest request, HttpServletResponse response) {
+        boolean isValid = otpService.validateOtp(request.telephone(), request.otp());
+        if (isValid) {
+            // Clear OTP after successful verification
+            otpService.clearOtpByTelephone(request.telephone());
+
+            // Générer les tokens
+            var user = userRepository.findByTelephone(request.telephone()).orElseThrow();
+            AuthenticationResponse authResponse = service.generateTokens(user);
+
+            // Ajouter le refresh token comme cookie HttpOnly
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(100 * 24 * 60 * 60)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + authResponse.getAccessToken())
+                    .body(authResponse);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("OTP invalide ou expiré");
+        }
     }
 
 
