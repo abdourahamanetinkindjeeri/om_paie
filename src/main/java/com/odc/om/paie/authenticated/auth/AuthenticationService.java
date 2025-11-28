@@ -32,8 +32,9 @@ public class AuthenticationService {
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .pin(passwordEncoder.encode(request.getPin()))
+                .telephone(request.getTelephone())
+                .active(request.isActive())
                 .build();
         var savedUser = repository.save(user);
         var jwtToken = jwtService.generateToken(user);
@@ -46,14 +47,34 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-        var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
+        System.out.println("Tentative d'authentification pour téléphone: " + request.getTelephone());
+        var user = repository.findByTelephone(request.getTelephone())
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        System.out.println("Utilisateur trouvé: " + user.getTelephone());
+
+        // Vérifier si le compte est bloqué
+        if (user.isBlocked()) {
+            throw new RuntimeException("Compte bloqué après 3 tentatives échouées");
+        }
+
+        // Vérifier le PIN
+        if (!passwordEncoder.matches(request.getPin(), user.getPin())) {
+            // Incrémenter les tentatives échouées
+            user.setFailedAttempts(user.getFailedAttempts() + 1);
+
+            // Bloquer le compte après 3 tentatives
+            if (user.getFailedAttempts() >= 3) {
+                user.setBlocked(true);
+            }
+
+            repository.save(user);
+            throw new RuntimeException("PIN incorrect. Tentatives restantes: " + (3 - user.getFailedAttempts()));
+        }
+
+        // Réinitialiser les tentatives échouées en cas de succès
+        user.setFailedAttempts(0);
+        repository.save(user);
+
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
@@ -99,7 +120,7 @@ public class AuthenticationService {
         refreshToken = authHeader.substring(7);
         userEmail = jwtService.extractUsername(refreshToken);
         if (userEmail != null) {
-            var user = this.repository.findByEmail(userEmail)
+            var user = this.repository.findByTelephone(userEmail)
                     .orElseThrow();
             if (jwtService.isTokenValid(refreshToken, user)) {
                 var accessToken = jwtService.generateToken(user);

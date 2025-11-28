@@ -32,7 +32,7 @@ public class ApplicationConfig {
         return new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                return repository.findByEmail(username)
+                return repository.findByTelephone(username)
                         .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouve dans la BDD."));
             }
         };

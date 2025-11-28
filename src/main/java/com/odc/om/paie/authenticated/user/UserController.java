@@ -12,18 +12,9 @@ import java.security.Principal;
 import static com.odc.om.paie.authenticated.Constants.APP_ROOT;
 
 @RestController
-@RequestMapping(APP_ROOT+"users")
+@RequestMapping(APP_ROOT+"auth")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService service;
-
-    @PatchMapping
-    public ResponseEntity<?> changePassword(
-          @RequestBody ChangePasswordRequest request,
-          Principal connectedUser
-    ) {
-        service.changePassword(request, connectedUser);
-        return ResponseEntity.ok().build();
-    }
 }

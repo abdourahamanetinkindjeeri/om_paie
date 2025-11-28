@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collections;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +24,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "app_user")
 public class User implements UserDetails {
+    @Builder.Default
+    private int failedAttempts = 0;
 
     @Id
     @GeneratedValue
@@ -30,12 +34,18 @@ public class User implements UserDetails {
     private String lastname;
     @Column(unique = true)
     private String email;
-    private String password;
 
     private String telephone;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private String pin;
+
+    // ...existing code...
+
+    // ...existing code...
+    private String typePiece;
+    private String numero;
+    private String adresse;
+    private String photo;
 
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
@@ -53,17 +63,17 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return role.getAuthorities();
+        return Collections.emptyList();
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return null;
     }
 
     @Override
-    public String getUsername() {
-        return email;
+        public String getUsername() {
+            return telephone;
     }
 
     @Override
@@ -73,7 +83,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !isBlocked;
     }
 
     @Override
