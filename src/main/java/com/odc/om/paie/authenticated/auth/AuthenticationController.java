@@ -1,5 +1,7 @@
 package com.odc.om.paie.authenticated.auth;
 
+import com.odc.om.paie.authenticated.auth.OtpService;
+import com.odc.om.paie.authenticated.auth.OtpVerificationRequest;
 
 import com.odc.om.paie.authenticated.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;

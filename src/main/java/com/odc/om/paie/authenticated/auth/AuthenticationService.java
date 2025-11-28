@@ -1,5 +1,6 @@
 package com.odc.om.paie.authenticated.auth;
 
+import com.odc.om.paie.authenticated.auth.OtpService;
 import com.odc.om.paie.authenticated.config.JwtService;
 import com.odc.om.paie.authenticated.token.Token;
 import com.odc.om.paie.authenticated.token.TokenRepository;
