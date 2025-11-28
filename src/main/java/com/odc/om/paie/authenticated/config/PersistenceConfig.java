@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @Configuration
-@EnableJpaAuditing(auditorAwareRef = "entityAuditor")  // Vous utilisez le bean "entityAuditor"
+@EnableJpaAuditing(auditorAwareRef = "auditorAware")  // Reference the correct bean name
 
 public class PersistenceConfig {
 //

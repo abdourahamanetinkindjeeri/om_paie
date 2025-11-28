@@ -13,24 +13,36 @@ import java.nio.file.Paths;
 public class PaieApplication {
 
 	public static void main(String[] args) {
-		// Charger les variables d'environnement depuis le fichier .env
-		try {
-			Path envPath = Paths.get(".env");
-			if (Files.exists(envPath)) {
-				Files.lines(envPath).forEach(line -> {
-					if (line.contains("=") && !line.trim().startsWith("#")) {
-						String[] parts = line.split("=", 2);
-						if (parts.length == 2) {
-							System.setProperty(parts[0].trim(), parts[1].trim());
-						}
-					}
-				});
-			}
-		} catch (Exception e) {
-			// Ignorer les erreurs de chargement du .env
-		}
+		// Charger les variables d'environnement depuis le fichier .env si présent
+		loadEnvFile();
 
 		SpringApplication.run(PaieApplication.class, args);
+	}
+
+	private static void loadEnvFile() {
+		try {
+			Path envPath = Paths.get(".env");
+			if (Files.exists(envPath) && Files.isReadable(envPath)) {
+				Files.lines(envPath)
+					.filter(line -> line.contains("=") && !line.trim().startsWith("#"))
+					.forEach(line -> {
+						String[] parts = line.split("=", 2);
+						if (parts.length == 2) {
+							String key = parts[0].trim();
+							String value = parts[1].trim();
+							// Ne pas écraser les variables d'environnement système
+							if (System.getenv(key) == null) {
+								System.setProperty(key, value);
+							}
+						}
+					});
+				System.out.println(".env file loaded successfully");
+			} else {
+				System.out.println(".env file not found or not readable, using system environment variables");
+			}
+		} catch (Exception e) {
+			System.err.println("Error loading .env file: " + e.getMessage() + ", using system environment variables");
+		}
 	}
 
 }
