@@ -21,7 +21,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate # ⚠️ en prod, préfère validate ou none avec Flyway/Liquibase
+      ddl-auto: create-drop # ⚠️ en prod, préfère validate ou none avec Flyway/Liquibase
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
