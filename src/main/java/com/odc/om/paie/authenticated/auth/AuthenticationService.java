@@ -6,11 +6,16 @@ import com.odc.om.paie.authenticated.token.TokenRepository;
 import com.odc.om.paie.authenticated.token.TokenType;
 import com.odc.om.paie.authenticated.user.User;
 import com.odc.om.paie.authenticated.user.UserRepository;
+import com.odc.om.paie.notification.model.Channel;
+import com.odc.om.paie.notification.model.NotificationRequest;
+import com.odc.om.paie.notification.usecase.SendNotificationUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,12 +25,15 @@ import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
     private final UserRepository repository;
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final OtpService otpService;
+    private final SendNotificationUseCase sendNotificationUseCase;
 
     public AuthenticationResponse register(RegisterRequest request) {
         var user = User.builder()
@@ -46,7 +54,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    public User validateCredentials(AuthenticationRequest request) {
         System.out.println("Tentative d'authentification pour téléphone: " + request.getTelephone());
         var user = repository.findByTelephone(request.getTelephone())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -75,6 +83,10 @@ public class AuthenticationService {
         user.setFailedAttempts(0);
         repository.save(user);
 
+        return user;
+    }
+
+    public AuthenticationResponse generateTokens(User user) {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
@@ -132,6 +144,22 @@ public class AuthenticationService {
                         .build();
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }
+        }
+    }
+
+    @Async
+    public void sendOtpAsync(User user) {
+        String otp = otpService.generateOtp(user);
+        try {
+            sendNotificationUseCase.execute(new NotificationRequest(
+                    user.getEmail(),
+                    "Code OTP de connexion",
+                    "Votre code OTP est : " + otp + ". Valable 5 minutes.",
+                    Channel.EMAIL
+            ));
+            log.info("OTP envoyé à {} pour l'utilisateur {}", user.getEmail(), user.getTelephone());
+        } catch (Exception e) {
+            log.error("Échec d'envoi de l'OTP à {}: {}", user.getEmail(), e.getMessage());
         }
     }
 }

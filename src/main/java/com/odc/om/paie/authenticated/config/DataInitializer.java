@@ -26,7 +26,7 @@ public class DataInitializer implements CommandLineRunner {
             User admin = User.builder()
                     .firstname("Admin")
                     .lastname("System")
-                    .email("admin@paie.com")
+                    .email("dev.testghost@gmail.com")
                     .pin(passwordEncoder.encode("1234"))
                     .telephone("771234567")
                     .active(true)
