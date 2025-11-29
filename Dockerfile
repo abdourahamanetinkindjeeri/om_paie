@@ -20,7 +20,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 RUN apk add --no-cache curl && rm -rf /var/cache/apk/*
 
 WORKDIR /app
-COPY --from=builder /app/target/paie.jar app.jar
+COPY --from=builder /app/target/paie-0.0.1-SNAPSHOT.jar app.jar
 RUN chown spring:spring app.jar
 
 USER spring:spring
