@@ -1,8 +1,57 @@
+server:
+  port: 8090
+
 spring:
+  application:
+    name: paie
+
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-1
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update # ⚠️ en prod, préfère validate ou none avec Flyway/Liquibase
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        transaction.jta.platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
+        format_sql: true
+    show-sql: false # ⚠️ désactive en prod, trop verbeux
+    open-in-view: false # bonne pratique pour éviter LazyInitializationException
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false # évite erreurs sur DTOs vides
+
+springdoc:
+  api-docs:
+    path: /api/v3/api-docs
+  swagger-ui:
+    path: /api/documentation
+    url: /api/v3/api-docs
+
+logging:
+  level:
+    root: INFO
+    "org.springframework.web": WARN
+    "org.hibernate.SQL": DEBUG # utile en dev pour voir les requêtes
+    "com.zaxxer.hikari": INFO
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION}
+      refresh-token:
+        expiration: ${JWT_REFRESH_EXPIRATION} # ⚠️ différencie refresh de access
