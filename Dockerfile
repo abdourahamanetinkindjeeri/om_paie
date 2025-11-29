@@ -1,27 +1,34 @@
-# Étape 1 : Build avec Maven et JDK 21
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 
-# Copier le pom.xml et télécharger les dépendances
-COPY pom.xml .
-RUN mvn dependency:go-offline
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+RUN ./mvnw dependency:go-offline -B
 
-# Copier le code source et builder le jar
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -B
 
-# Étape 2 : Image finale avec JRE 21
+# Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 
+LABEL maintainer="Abdourahamane"
+LABEL description="OMPAY - Gestion de comptes mobile money"
+LABEL version="1.2.0"
+
+RUN addgroup -S spring && adduser -S spring -G spring
+RUN apk add --no-cache curl && rm -rf /var/cache/apk/*
+
 WORKDIR /app
+COPY --from=builder /app/target/paie.jar app.jar
+RUN chown spring:spring app.jar
 
-# Copier le jar généré
-COPY --from=build /app/target/*.jar app.jar
+USER spring:spring
+EXPOSE 8090
 
-# Exposer le port par défaut
-EXPOSE 8080
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
-# Lancer l'application
-ENTRYPOINT ["java","-jar","app.jar"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar"]
