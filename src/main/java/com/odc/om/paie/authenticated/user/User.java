@@ -3,6 +3,7 @@ package com.odc.om.paie.authenticated.user;
 
 
 import com.odc.om.paie.authenticated.token.Token;
+import com.odc.om.paie.entities.AbstractEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,13 +25,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "app_user")
-public class User implements UserDetails {
+public class User extends AbstractEntity implements UserDetails {
     @Builder.Default
     private int failedAttempts = 0;
 
-    @Id
-    @GeneratedValue
-    private UUID id;
     private String firstname;
     private String lastname;
     @Column(unique = true)

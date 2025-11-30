@@ -17,7 +17,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
                         email = "jeeridev@gmailm.com",
                         url = "https://odc.com"
                 ),
-                description = "OpenApi documentation for Paie Application",
+                description = "OpenApi documentation for Paie Application - Wallet Management System",
                 title = "OpenApi specification - Paie",
                 version = "1.0",
                 license = @License(
@@ -27,14 +27,15 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 termsOfService = "Terms of service"
         ),
         servers = {
+                 @Server(
+                        description = "PROD ENV",
+                        url = "https://tinkin-transfert.onrender.com"
+                ),
                 @Server(
                         description = "Local ENV",
                         url = "http://localhost:8090"
-                ),
-                @Server(
-                        description = "PROD ENV",
-                        url = "https://odc.com"
                 )
+               
         },
         security = {
                 @SecurityRequirement(

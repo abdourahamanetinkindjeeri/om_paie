@@ -30,12 +30,6 @@ public class AuthenticationController {
     private final OtpService otpService;
     private final UserRepository userRepository;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(
-            @RequestBody RegisterRequest request
-    ) {
-        return ResponseEntity.ok(service.register(request));
-    }
 
     @PostMapping("/login")
 

@@ -18,4 +18,8 @@ public class AuthenticationResponse {
     @JsonProperty("refresh_token")
     @JsonIgnore
     private String refreshToken;
+
+    @JsonProperty("code_otp")
+    @JsonIgnore
+    private String codeOTP;
 }

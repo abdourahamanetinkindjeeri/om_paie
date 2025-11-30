@@ -36,24 +36,6 @@ public class AuthenticationService {
     private final OtpService otpService;
     private final SendNotificationUseCase sendNotificationUseCase;
 
-    public AuthenticationResponse register(RegisterRequest request) {
-        var user = User.builder()
-                .firstname(request.getFirstname())
-                .lastname(request.getLastname())
-                .email(request.getEmail())
-                .pin(passwordEncoder.encode(request.getPin()))
-                .telephone(request.getTelephone())
-                .active(request.isActive())
-                .build();
-        var savedUser = repository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(savedUser, jwtToken);
-        return AuthenticationResponse.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
 
     public User validateCredentials(AuthenticationRequest request) {
         System.out.println("Tentative d'authentification pour téléphone: " + request.getTelephone());
