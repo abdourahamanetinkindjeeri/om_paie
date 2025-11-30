@@ -113,13 +113,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.brevo</groupId>
-            <artifactId>brevo</artifactId>
-            <version>1.1.0</version>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- Flyway for database migrations -->
         <dependency>
             <groupId>org.flywaydb</groupId>
