@@ -14,8 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
-import static com.odc.om.paie.authenticated.user.Permission.*;
-import static com.odc.om.paie.authenticated.user.Role.*;
 import static com.odc.om.paie.authenticated.Constants.APP_ROOT;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -42,6 +40,7 @@ public class SecurityConfiguration {
             "/api/documentation",
             "/api/documentation/**",
             "/api/swagger-ui/**",
+            "/api/v3/api-docs",
             "/api/v3/api-docs/**"
     };
 
@@ -57,7 +56,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
                                 .permitAll()
-                                .requestMatchers("/" + APP_ROOT + "**").hasAnyRole(ADMIN.name(), MANAGER.name(),EMPLOYE.name())
+                                .requestMatchers("/" + APP_ROOT + "**").authenticated()
                                 .anyRequest()
                                 .authenticated()
                 )

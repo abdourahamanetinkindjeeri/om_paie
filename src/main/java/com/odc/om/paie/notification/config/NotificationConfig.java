@@ -9,11 +9,17 @@ import com.odc.om.paie.notification.usecase.SendNotificationService;
 import com.odc.om.paie.notification.usecase.SendNotificationUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
 @Configuration
 public class NotificationConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
     @Bean
     public SendNotificationUseCase sendNotificationUseCase(

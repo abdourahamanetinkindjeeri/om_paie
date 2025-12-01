@@ -77,6 +77,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Jackson JSR310 for Java 8 date/time types -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
         <!-- Dotenv (variables d'environnement) -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>

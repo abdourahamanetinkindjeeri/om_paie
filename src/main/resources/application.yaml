@@ -55,3 +55,5 @@ application:
       expiration: ${JWT_EXPIRATION}
       refresh-token:
         expiration: ${JWT_REFRESH_EXPIRATION} # ⚠️ différencie refresh de access
+  resend:
+    api-key: ${RESEND_API_KEY}
