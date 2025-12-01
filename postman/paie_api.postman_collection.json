@@ -1,0 +1,218 @@
+{
+  "info": {
+    "name": "Paie API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection pour tester l'API Paie - Authentification et gestion des comptes"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8090/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "wallet_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentification",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"773456789\",\n  \"pin\": \"9999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Connexion avec téléphone et PIN. Utilise les credentials de test: EMPLOYEE (773456789 / 9999)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set('access_token', response.access_token);",
+                  "        console.log('Token d\\'accès enregistré');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vérifier OTP (si nécessaire)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telephone\": \"773456789\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "description": "Vérifier le code OTP envoyé par email"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.access_token) {",
+                  "        pm.collectionVariables.set('access_token', response.access_token);",
+                  "        console.log('Token d\\'accès enregistré après OTP');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Informations utilisateur (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Récupérer les informations de l'utilisateur connecté"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gestion des comptes",
+      "item": [
+        {
+          "name": "Lister mes comptes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/comptes",
+              "host": ["{{base_url}}"],
+              "path": ["comptes"]
+            },
+            "description": "Récupérer la liste des comptes de l'utilisateur connecté"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const wallets = pm.response.json();",
+                  "    if (wallets.length > 0) {",
+                  "        pm.collectionVariables.set('wallet_id', wallets[0].id);",
+                  "        console.log('ID du premier wallet enregistré:', wallets[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Détails d'un compte",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/comptes/{{wallet_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["comptes", "{{wallet_id}}"]
+            },
+            "description": "Récupérer les détails d'un compte spécifique"
+          }
+        },
+        {
+          "name": "Solde du compte",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/comptes/{{wallet_id}}/balance",
+              "host": ["{{base_url}}"],
+              "path": ["comptes", "{{wallet_id}}", "balance"]
+            },
+            "description": "Récupérer le solde d'un compte"
+          }
+        },
+        {
+          "name": "Historique des transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/comptes/{{wallet_id}}/history",
+              "host": ["{{base_url}}"],
+              "path": ["comptes", "{{wallet_id}}", "history"]
+            },
+            "description": "Récupérer l'historique des transactions d'un compte"
+          }
+        }
+      ]
+    }
+  ]
+}
